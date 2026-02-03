@@ -5,11 +5,33 @@
 #include "Oasis/Sine.hpp"
 #include "Oasis/Expression.hpp"
 #include "Oasis/UnaryExpression.hpp"
+#include <cmath>
 
 namespace Oasis {
 auto Sine<Expression>::Simplify() const -> std::unique_ptr<Expression>
 {
-    return nullptr;
+    const auto simplifiedOperand = operand ? operand->Simplify() : nullptr;
+    if (!operand){
+        return nullptr;
+    }
+
+    // Sine(real) --> some number
+    if (const auto realCase = RecursiveCast<Sine<Real>>(simplifiedOperand); realCase != nullptr) {
+        return std::make_unique<Real>(Real(std::sin(realCase->GetOperand().GetValue())));
+    }
+
+    // Sine(real*pi) --> some number
+    if (const auto piCase = RecursiveCast<Sine<Multiply<Real,Pi>>>(simplifiedOperand); piCase != nullptr) {
+        return std::make_unique<Real>(Real(std::sin(piCase->GetOperand().GetMostSigOp().GetValue() * piCase->GetOperand().GetLeastSigOp().GetValue())));
+    }
+
+    // Sine(2npi + x) --> Sine(x)
+    if (const auto periodicCase = RecursiveCast<Sine<Add<Multiply<Real,Pi>,Expression>>>(simplifiedOperand); periodicCase != nullptr) {
+        const Real& multreal = periodicCase->GetOperand().getMostSigOp().GetMostSigOp();
+        if ((multreal.GetValue() % 2) == 0) {
+            return std::make_unique<Sine<Expression>>(periodicCase->GetOperand().GetLeastSigOp());
+        }
+    }
 }
 
 auto Sine<Expression>::Differentiate(const Expression&) const -> std::unique_ptr<Expression>
