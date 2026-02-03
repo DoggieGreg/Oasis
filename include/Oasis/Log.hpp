@@ -10,9 +10,6 @@
 
 namespace Oasis {
 
-template <IExpression BaseT, IExpression ArgumentT>
-class Log;
-
 /// @cond
 template <>
 class Log<Expression, Expression> : public BinaryExpression<Log> {
@@ -22,7 +19,7 @@ public:
 
     Log(const Expression& base, const Expression& argument);
 
-    [[nodiscard]] auto Simplify() const -> std::unique_ptr<Expression> final;
+    [[deprecated]] [[nodiscard]] auto Simplify() const -> std::unique_ptr<Expression> final;
 
     [[nodiscard]] auto Integrate(const Expression& integrationVariable) const -> std::unique_ptr<Expression> final;
     [[nodiscard]] auto Differentiate(const Expression& differentiationVariable) const -> std::unique_ptr<Expression> final;
@@ -38,7 +35,7 @@ public:
  * @tparam BaseT The type of the base expression.
  * @tparam ArgumentT The type of the argument expression.
  */
-template <IExpression BaseT = Expression, IExpression ArgumentT = BaseT>
+template <typename BaseT = Expression, typename ArgumentT = BaseT>
 class Log : public BinaryExpression<Log, BaseT, ArgumentT> {
 public:
     Log() = default;

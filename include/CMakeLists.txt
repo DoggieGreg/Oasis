@@ -8,6 +8,7 @@ set(Oasis_HEADERS
     Oasis/EulerNumber.hpp
     Oasis/Exponent.hpp
     Oasis/Expression.hpp
+    Oasis/FwdDecls.hpp
     Oasis/Imaginary.hpp
     Oasis/Integral.hpp
     Oasis/LeafExpression.hpp
@@ -20,6 +21,8 @@ set(Oasis_HEADERS
     Oasis/Pi.hpp
     Oasis/Real.hpp
     Oasis/RecursiveCast.hpp
+    Oasis/SimplifyVisitor.hpp
+    Oasis/Sine.hpp
     Oasis/Subtract.hpp
     Oasis/UnaryExpression.hpp
     Oasis/Undefined.hpp
