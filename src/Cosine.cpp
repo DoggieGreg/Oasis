@@ -37,10 +37,10 @@ auto Cosine<Expression>::Simplify() const -> std::unique_ptr<Expression>
     // }
 
     
-    if (auto CosNegativeOperand = RecursiveCast<Cosine<Multiply<Real,Expression>>>(simplifiedOperand); CosNegativeOperand != nullptr) {
+    if (auto CosMultiplyOperand = RecursiveCast<Cosine<Multiply<Real,Expression>>>(simplifiedOperand); CosMultiplyOperand != nullptr) {
         //Cos(multreal*multexp)
-        const Real& multreal = CosNegativeOperand->GetOperand().GetMostSigOp();
-        const Oasis::IExpression auto& multexp = CosNegativeOperand->GetOperand().GetLeastSigOp();
+        const Real& multreal = CosMultiplyOperand->GetOperand().GetMostSigOp();
+        const Oasis::IExpression auto& multexp = CosMultiplyOperand->GetOperand().GetLeastSigOp();
         
         // Cos(-x) --> Cos(x)
         if (multreal.GetValue() < 0){
@@ -56,6 +56,13 @@ auto Cosine<Expression>::Simplify() const -> std::unique_ptr<Expression>
             return std::make_unique<Add<Expression>>(Multiply<Real,Expression>{Real(4),Exponent<Expression,Real>{Cosine<Expression>{Multiply<Real,Expression>(Real(multreal.GetValue() / 3),multexp)},Real(3)}}
                                                     ,Multiply<Real,Expression>{Real(-3),Cosine<Expression>{Multiply<Real,Expression>(Real(multreal.GetValue() / 3),multexp)}});
         }
+    }
+    // Cos(A + B) = Cos(A)Cos(B) - Sin(A)Sin(B)
+    if (auto CosAddOperand = RecursiveCast<Cosine<Add<Expression,Expression>>>(simplifiedOperand); CosAddOperand != nullptr) {
+        const Oasis::IExpression auto& Aexp = CosAddOperand->GetOperand().GetMostSigOp();
+        const Oasis::IExpression auto& Bexp = CosAddOperand->GetOperand().GetLeastSigOp();
+        return std::make_unique<Add<Expression>>(Multiply<Expression,Expression>{Cosine<Expression>{Aexp},Cosine<Expression>{Bexp}}
+                                                ,Multiply<Real,Expression>{Real(-1),Multiply<Expression,Expression>{Sine<Expression>{Aexp},Sine<Expression>{Bexp}}});
     }
 
     return nullptr;
