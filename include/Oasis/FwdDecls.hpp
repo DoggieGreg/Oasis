@@ -43,6 +43,9 @@ class Magnitude;
 template <typename>
 class Sine;
 
+template <typename>
+class Cosine;
+
 template <typename, typename>
 class Derivative;
 

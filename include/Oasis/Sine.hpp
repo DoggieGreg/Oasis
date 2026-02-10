@@ -5,15 +5,13 @@
 #ifndef OASIS_SINE_HPP
 #define OASIS_SINE_HPP
 
+#include "Expression.hpp"
 #include "UnaryExpression.hpp"
 
 namespace Oasis {
 
-template <typename OperandT>
-class Sine;
-
-template <>
-class Sine<Expression> final : public UnaryExpression<Sine> {
+template <typename OperandT = Expression>
+class Sine final : public UnaryExpression<Sine, OperandT> {
 public:
     Sine() = default;
     Sine(const Sine& other)
@@ -26,11 +24,18 @@ public:
     {
     }
 
-    [[deprecated]] [[nodiscard]] auto Simplify() const -> std::unique_ptr<Expression> override;
+    [[deprecated]] [[nodiscard]] auto Simplify() const -> std::unique_ptr<Expression> override 
+    { 
+        return nullptr;
+    };
 
-    [[nodiscard]] auto Differentiate(const Expression& var) const -> std::unique_ptr<Expression> override;
+    [[nodiscard]] auto Differentiate(const Expression& var) const -> std::unique_ptr<Expression> override {
+        return nullptr;
+     };
 
-    [[nodiscard]] auto Integrate(const Expression& var) const -> std::unique_ptr<Expression> override;
+    [[nodiscard]] auto Integrate(const Expression& var) const -> std::unique_ptr<Expression> override {
+        return nullptr;
+     };
 
     EXPRESSION_TYPE(Sine)
     EXPRESSION_CATEGORY(UnExp)
