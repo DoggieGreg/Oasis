@@ -5,7 +5,6 @@
 #include "Oasis/Sine.hpp"
 #include "Oasis/Expression.hpp"
 #include "Oasis/UnaryExpression.hpp"
-#include <cmath>
 
 namespace Oasis {
 // auto Sine<Expression>::Simplify() const -> std::unique_ptr<Expression>

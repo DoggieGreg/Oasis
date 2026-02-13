@@ -15,12 +15,12 @@ class Sine final : public UnaryExpression<Sine, OperandT> {
 public:
     Sine() = default;
     Sine(const Sine& other)
-        : UnaryExpression<Sine>(other)
+        : UnaryExpression<Sine, OperandT>(other)
     {
     }
 
-    explicit Sine(const Expression& operand)
-        : UnaryExpression<Sine>(operand)
+    explicit Sine(const OperandT& operand)
+        : UnaryExpression<Sine, OperandT>(operand)
     {
     }
 

@@ -1,3 +1,7 @@
+//
+// Created by Gregory Lemonnier 2/xx/26.
+//
+
 #ifndef OASIS_COSINE_HPP
 #define OASIS_COSINE_HPP
 
@@ -6,20 +10,17 @@
 
 namespace Oasis {
 
-template <IExpression OperandT>
-class Cosine;
-
 template <typename OperandT = Expression>
 class Cosine final :public UnaryExpression<Cosine, OperandT> {
 public:
     Cosine() = default;
     Cosine(const Cosine& other)
-        : UnaryExpression<Cosine>(other)
+        : UnaryExpression<Cosine, OperandT>(other)
     {
     }
 
-    explicit Cosine(const Expression& operand)
-        : UnaryExpression<Cosine>(operand)
+    explicit Cosine(const OperandT& operand)
+        : UnaryExpression<Cosine, OperandT>(operand)
     {
     }
 

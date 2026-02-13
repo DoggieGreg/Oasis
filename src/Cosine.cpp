@@ -1,7 +1,10 @@
+//
+// Created by Gregory Lemonnier on 2/xx/26.
+//
+
 #include "Oasis/Cosine.hpp"
 #include "Oasis/Expression.hpp"
 #include "Oasis/UnaryExpression.hpp"
-#include <cmath>
 
 namespace Oasis {
 // auto Cosine<Expression>::Simplify() const -> std::unique_ptr<Expression>

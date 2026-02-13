@@ -3,10 +3,12 @@
 //
 
 #include <format>
+#include <cmath>
 
 #include "Oasis/SimplifyVisitor.hpp"
 
 #include "Oasis/Add.hpp"
+#include "Oasis/Cosine.hpp"
 #include "Oasis/Derivative.hpp"
 #include "Oasis/Divide.hpp"
 #include "Oasis/EulerNumber.hpp"
@@ -1352,23 +1354,22 @@ auto SimplifyVisitor::TypedVisit(const Sine<Expression>& sine) -> RetT
 
     // Sine(real) --> some number
     if (const auto realCase = RecursiveCast<Sine<Real>>(simplifiedOperand); realCase != nullptr) {
-        return std::make_unique<Real>(Real(std::sin(realCase->GetOperand().GetValue())));
+        return gsl::not_null {std::make_unique<Real>(Real(std::sin(realCase->GetOperand().GetValue())))};
     }
 
     // Sine(real*pi) --> some number
     if (const auto piCase = RecursiveCast<Sine<Multiply<Real,Pi>>>(simplifiedOperand); piCase != nullptr) {
-        return std::make_unique<Real>(Real(std::sin(piCase->GetOperand().GetMostSigOp().GetValue() * piCase->GetOperand().GetLeastSigOp().GetValue())));
+        return gsl::not_null { std::make_unique<Real>(Real(std::sin(piCase->GetOperand().GetMostSigOp().GetValue() * piCase->GetOperand().GetLeastSigOp().GetValue())))};
     }
 
     // Sine(2npi + x) --> Sine(x)
     if (const auto periodicCase = RecursiveCast<Sine<Add<Multiply<Real,Pi>,Expression>>>(simplifiedOperand); periodicCase != nullptr) {
         const Real& multreal = periodicCase->GetOperand().GetMostSigOp().GetMostSigOp();
-        if ((multreal.GetValue() % 2) == 0) {
-            return std::make_unique<Sine<Expression>>(periodicCase->GetOperand().GetLeastSigOp());
+        if (std::floor(multreal.GetValue()) == std::ceil(multreal.GetValue()) && ( ((int)multreal.GetValue()) % 2) == 0) {
+            return gsl::not_null { std::make_unique<Sine<Expression>>(periodicCase->GetOperand().GetLeastSigOp())};
         }
     }
-
-    return simplifiedOperand->Accept(*this);
+    return gsl::not_null { simplifiedOperand.Copy() };
 }
 
 auto SimplifyVisitor::TypedVisit(const Cosine<Expression>& cosine) -> RetT
@@ -1387,19 +1388,19 @@ auto SimplifyVisitor::TypedVisit(const Cosine<Expression>& cosine) -> RetT
 
     // Cos(real) --> some number
     if (const auto realCase = RecursiveCast<Cosine<Real>>(simplifiedOperand); realCase != nullptr) {
-        return std::make_unique<Real>(Real(std::cos(realCase->GetOperand().GetValue())));
+        return gsl::not_null { std::make_unique<Real>(Real(std::cos(realCase->GetOperand().GetValue())))};
     }
 
     // Cos(real*pi) --> some number
     if (const auto piCase = RecursiveCast<Cosine<Multiply<Real,Pi>>>(simplifiedOperand); piCase != nullptr) {
-        return std::make_unique<Real>(Real(std::cos(piCase->GetOperand().GetMostSigOp().GetValue() * piCase->GetOperand().GetLeastSigOp().GetValue())));
+        return gsl::not_null { std::make_unique<Real>(Real(std::cos(piCase->GetOperand().GetMostSigOp().GetValue() * piCase->GetOperand().GetLeastSigOp().GetValue())))};
     }
 
     // Cos(2npi + x) --> Cos(x)
     if (const auto periodicCase = RecursiveCast<Cosine<Add<Multiply<Real,Pi>,Expression>>>(simplifiedOperand); periodicCase != nullptr) {
-        const Real& multreal = periodicCase->GetOperand().getMostSigOp().GetMostSigOp();
-        if ((multreal.GetValue() % 2) == 0) {
-            return std::make_unique<Cosine<Expression>>(periodicCase->GetOperand().GetLeastSigOp());
+        const Real& multreal = periodicCase->GetOperand().GetMostSigOp().GetMostSigOp();
+        if (std::floor(multreal.GetValue()) == std::ceil(multreal.GetValue()) && ( ((int)multreal.GetValue()) % 2) == 0) {
+            return gsl::not_null { std::make_unique<Cosine<Expression>>(periodicCase->GetOperand().GetLeastSigOp())};
         }
     }
 
@@ -1431,19 +1432,19 @@ auto m = Multiply<Expression> { multCase->GetMostSigOp(), multCase->GetLeastSigO
             return Cosine<Expression> {Multiply<Real,Expression>{Real (multreal.GetValue() * -1),multexp}}.Accept(*this);
         }
         // Cos(2x) --> cos^2(x) - sin^2(x)
-        if ((multreal.GetValue() % 2) == 0) {
+        if (std::floor(multreal.GetValue()) == std::ceil(multreal.GetValue()) && ( ((int)multreal.GetValue()) % 2) == 0) {
             auto left = Exponent<Expression,Real>{Cosine<Expression>{Multiply<Real,Expression>{Real(multreal.GetValue() / 2),multexp}},Real(2)}.Accept(*this);
             if (!left) {
                 return left;
             }
-            auto right = Multiply<Real,Expression>{Real(-1),Exponent<Expression,Real>{Sine<Expression>{Multiply<Real,Expression>{Real(multreal.GetValue / 2),multexp}},Real(2)}}.Accept(*this);
+            auto right = Multiply<Real,Expression>{Real(-1),Exponent<Expression,Real>{Sine<Expression>{Multiply<Real,Expression>{Real(multreal.GetValue() / 2),multexp}},Real(2)}}.Accept(*this);
             if (!right) {
                 return right;
             }
             return Add<Expression> {*(left.value()),*(right.value())}.Accept(*this);
         }
         // Cos(3x) --> 4cos^3(x) - 3cos(x)
-        if ((multreal.GetValue() % 3) == 0) {
+        if (std::floor(multreal.GetValue()) == std::ceil(multreal.GetValue()) && ( ((int)multreal.GetValue()) % 3) == 0) {
             auto left = Multiply<Real,Expression> {Real(4),Exponent<Expression,Real>{Cosine<Expression>{Multiply<Real,Expression>(Real(multreal.GetValue() / 3),multexp)},Real(3)}}.Accept(*this);
             if (!left) {
                 return left;
@@ -1456,7 +1457,7 @@ auto m = Multiply<Expression> { multCase->GetMostSigOp(), multCase->GetLeastSigO
         }
     }
     // Cos(A + B) = Cos(A)Cos(B) - Sin(A)Sin(B)
-    if (auto CosAddOperand = RecursiveCast<Cosine<Add<Expression,Expression>>>(simplifiedOperand); CosAddOperand != nullptr) {
+    if (auto CosAddOperand = RecursiveCast<Cosine<Add<Expression>>>(simplifiedOperand); CosAddOperand != nullptr) {
         const Oasis::IExpression auto& Aexp = CosAddOperand->GetOperand().GetMostSigOp();
         const Oasis::IExpression auto& Bexp = CosAddOperand->GetOperand().GetLeastSigOp();
         
@@ -1479,7 +1480,7 @@ auto m = Multiply<Expression> { multCase->GetMostSigOp(), multCase->GetLeastSigO
         return Add<Expression> {Multiply<Expression>{*(cosA.value()),*(cosB.value())},Multiply<Real,Expression>{Real(-1),Multiply<Expression>{*(sinA.value()),*(sinB.value())}} }.Accept(*this);
 
     }
-    return simplifiedOperand->Accept(*this);
+    return gsl::not_null { simplifiedOperand.Copy() };
 }
 
 auto SimplifyVisitor::TypedVisit(const Derivative<>& derivative) -> RetT
